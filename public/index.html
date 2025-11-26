@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provital Delivery Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 { font-size: 28px; font-weight: 600; }
+        .refresh-btn {
+            padding: 12px 24px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .message {
+            padding: 16px;
+            margin: 20px 30px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .table-container { padding: 30px; overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th {
+            background: #f8f9fa;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+        }
+        td { padding: 16px; border-bottom: 1px solid #e9ecef; }
+        tr { transition: all 0.2s; }
+        tr:hover { background: #f8f9fa; }
+        .delivered { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important; color: white; }
+        .delivered:hover { background: linear-gradient(135deg, #0e8070 0%, #2dd368 100%) !important; }
+        .unfulfilled { background: #fff5f5; }
+        .fulfilled { background: #fffbeb; }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .unpaid { background: #fee; color: #c00; }
+        .paid { background: #d1f2eb; color: #0a6e4a; }
+        button {
+            padding: 8px 16px;
+            margin: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+        button:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        button:disabled {
+            background: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #loadMoreBtn {
+            display: block;
+            margin: 20px auto 30px;
+            padding: 12px 32px;
+            font-size: 14px;
+        }
+        .products-cell { max-width: 300px; font-size: 13px; color: #6c757d; }
+        .order-card {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+        .order-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .order-card-title { font-size: 16px; font-weight: 600; }
+        .order-card-details {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        .order-card-details.expanded { display: block; }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        .detail-label { color: #6c757d; font-weight: 500; }
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .card-actions button { flex: 1; }
+        .search-container {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .search-box {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: modalSlide 0.3s ease;
+        }
+        @keyframes modalSlide {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .modal-message {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .modal-btn-cancel {
+            background: #e9ecef;
+            color: #495057;
+        }
+        .modal-btn-cancel:hover { background: #dee2e6; }
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .modal-btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px;
+                text-align: center;
+            }
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            .header-actions span {
+                margin: 0 !important;
+                margin-bottom: 10px !important;
+            }
+            .refresh-btn {
+                width: 100%;
+                margin: 0 !important;
+            }
+            h1 { font-size: 22px; }
+            .table-container { padding: 15px; }
+            table { display: none; }
+            .order-card { display: block; }
+            .message { margin: 15px; padding: 12px; font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Provital Delivery Manager</h1>
+            <div class="header-actions">
+                <span style="margin-right: 15px; opacity: 0.9;">👤 <span id="userDisplay"></span></span>
+                <button class="refresh-btn" onclick="currentCursor = null; loadOrders()">🔄 Refresh</button>
+                <button class="refresh-btn" onclick="logout()">🚪 Logout</button>
+            </div>
+        </div>
+        <div id="message"></div>
+        <div class="search-container">
+            <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search by order name, ID, customer, or product..." oninput="filterOrders()">
+        </div>
+        <div class="table-container">
+            <div id="ordersCards"></div>
+            <table id="ordersTable">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Order Name</th>
+                <th>Products</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="ordersBody">
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-message" id="modalMessage"></div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" id="modalConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        let currentCursor = null;
+        let hasNextPage = false;
+
+        async function fetchWithAuth(url, options = {}) {
+            const headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`
+            };
+            const response = await fetch(url, { ...options, headers });
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('userId');
+                window.location.href = '/login.html';
+            }
+            return response;
+        }
+
+        async function loadOrders(cursor = null) {
+            try {
+                const url = cursor ? `/api/orders?cursor=${cursor}` : '/api/orders';
+                const response = await fetchWithAuth(url);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to load orders');
+                }
+                
+                if (!data.orders || !Array.isArray(data.orders)) {
+                    throw new Error('Invalid response format');
+                }
+                
+                currentCursor = data.pageInfo?.endCursor;
+                hasNextPage = data.pageInfo?.hasNextPage;
+                
+                const tbody = document.getElementById('ordersBody');
+                if (!cursor) tbody.innerHTML = '';
+                
+                const cardsContainer = document.getElementById('ordersCards');
+                if (!cursor) cardsContainer.innerHTML = '';
+                
+                data.orders.forEach(order => {
+                    const customer = order.customer ? 
+                        `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim() : '—';
+                    
+                    const isPaid = order.displayFinancialStatus === 'PAID';
+                    const isDelivered = order.displayFulfillmentStatus === 'DELIVERED';
+                    const statusClass = isDelivered ? 'delivered' : 
+                                       order.displayFulfillmentStatus === 'FULFILLED' ? 'fulfilled' : 'unfulfilled';
+                    
+                    const products = order.lineItems?.edges?.map(e => 
+                        `${e.node.name} (x${e.node.quantity})`
+                    ).join(', ') || '—';
+                    
+                    // Mobile card
+                    const card = document.createElement('div');
+                    card.className = `order-card ${statusClass}`;
+                    card.dataset.searchText = `${order.name} ${order.orderId} ${customer} ${products}`.toLowerCase();
+                    card.innerHTML = `
+                        <div class="order-card-header" onclick="toggleCard(this)">
+                            <div class="order-card-title">${order.name}</div>
+                            <span class="status-badge ${isPaid ? 'paid' : 'unpaid'}">${order.displayFinancialStatus || 'PENDING'}</span>
+                        </div>
+                        <div style="font-size: 13px; color: #6c757d;">${order.totalPriceSet.shopMoney.amount} ${order.totalPriceSet.shopMoney.currencyCode}</div>
+                        <div class="order-card-details">
+                            <div class="detail-row"><span class="detail-label">Order ID:</span><span>#${order.orderId}</span></div>
+                            <div class="detail-row"><span class="detail-label">Products:</span><span>${products}</span></div>
+                            <div class="detail-row"><span class="detail-label">Status:</span><span class="status-badge">${order.displayFulfillmentStatus || 'UNFULFILLED'}</span></div>
+                            <div class="detail-row"><span class="detail-label">Customer:</span><span>${customer}</span></div>
+                            <div class="detail-row"><span class="detail-label">Date:</span><span>${new Date(order.createdAt).toLocaleDateString()}</span></div>
+                            <div class="card-actions">
+                                <button onclick="markAsPaid('${order.orderId}', '${order.name}')" ${isPaid ? 'disabled' : ''}>
+                                    ${isPaid ? 'Paid' : 'Mark as Paid'}
+                                </button>
+                                <button onclick="markAsDelivered('${order.orderId}', '${order.name}')" ${isDelivered || !isPaid ? 'disabled' : ''}>
+                                    ${isDelivered ? 'Delivered' : 'Mark as Delivered'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    cardsContainer.appendChild(card);
+                    
+                    // Desktop table row
+                    const row = document.createElement('tr');
+                    row.className = statusClass;
+                    row.dataset.searchText = `${order.name} ${order.orderId} ${customer} ${products}`.toLowerCase();
+                    row.innerHTML = `
+                        <td><strong>#${order.orderId}</strong></td>
+                        <td><strong>${order.name}</strong></td>
+                        <td class="products-cell">${products}</td>
+                        <td><span class="status-badge ${isPaid ? 'paid' : 'unpaid'}">${order.displayFinancialStatus || 'PENDING'}</span></td>
+                        <td><span class="status-badge">${order.displayFulfillmentStatus || 'UNFULFILLED'}</span></td>
+                        <td>${order.totalPriceSet.shopMoney.amount} ${order.totalPriceSet.shopMoney.currencyCode}</td>
+                        <td>${customer}</td>
+                        <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td>
+                            <button onclick="markAsPaid('${order.orderId}', '${order.name}')" 
+                                    ${isPaid ? 'disabled' : ''}>
+                                ${isPaid ? 'Paid' : 'Mark as Paid'}
+                            </button>
+                            <button onclick="markAsDelivered('${order.orderId}', '${order.name}')" 
+                                    ${isDelivered || !isPaid ? 'disabled' : ''}>
+                                ${isDelivered ? 'Delivered' : 'Mark as Delivered'}
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                updatePaginationButton();
+            } catch (error) {
+                showMessage('Error loading orders: ' + error.message, 'error');
+            }
+        }
+
+        function updatePaginationButton() {
+            let btn = document.getElementById('loadMoreBtn');
+            if (!btn) {
+                btn = document.createElement('button');
+                btn.id = 'loadMoreBtn';
+                btn.onclick = () => loadOrders(currentCursor);
+                document.querySelector('.table-container').appendChild(btn);
+            }
+            btn.textContent = '⬇️ Load More Orders';
+            btn.style.display = hasNextPage ? 'block' : 'none';
+        }
+
+        function showConfirmModal(title, message, onConfirm) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('confirmModal').classList.add('show');
+            document.getElementById('modalConfirm').onclick = () => {
+                closeModal();
+                onConfirm();
+            };
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('show');
+        }
+
+        async function markAsPaid(orderId, orderName) {
+            const button = event.target;
+            
+            showConfirmModal(
+                '💳 Confirm Payment',
+                `Are you sure you want to mark Order ${orderName} (#${orderId}) as PAID?`,
+                async () => {
+                    button.disabled = true;
+                    button.textContent = 'Processing...';
+                    
+                    try {
+                        const response = await fetchWithAuth(`/api/orders/${orderId}/paid`, {
+                            method: 'POST'
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            showMessage(result.message, 'success');
+                            currentCursor = null;
+                            loadOrders();
+                        } else {
+                            showMessage('Error: ' + result.error, 'error');
+                            button.disabled = false;
+                            button.textContent = 'Mark as Paid';
+                        }
+                    } catch (error) {
+                        showMessage('Error: ' + error.message, 'error');
+                        button.disabled = false;
+                        button.textContent = 'Mark as Paid';
+                    }
+                }
+            );
+        }
+
+        async function markAsDelivered(orderId, orderName) {
+            const button = event.target;
+            
+            showConfirmModal(
+                '🚚 Confirm Delivery',
+                `Are you sure you want to mark Order ${orderName} (#${orderId}) as DELIVERED?`,
+                async () => {
+                    button.disabled = true;
+                    button.textContent = 'Processing...';
+                    
+                    try {
+                        const response = await fetchWithAuth(`/api/orders/${orderId}/delivered`, {
+                            method: 'POST'
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            showMessage(result.message, 'success');
+                            const row = button.closest('tr');
+                            const card = button.closest('.order-card');
+                            if (row) row.remove();
+                            if (card) card.remove();
+                        } else {
+                            showMessage('Error: ' + result.error, 'error');
+                            button.disabled = false;
+                            button.textContent = 'Mark as Delivered';
+                        }
+                    } catch (error) {
+                        showMessage('Error: ' + error.message, 'error');
+                        button.disabled = false;
+                        button.textContent = 'Mark as Delivered';
+                    }
+                }
+            );
+        }
+
+        function filterOrders() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            
+            document.querySelectorAll('.order-card').forEach(card => {
+                const matches = card.dataset.searchText.includes(searchTerm);
+                card.style.display = matches ? 'block' : 'none';
+            });
+            
+            document.querySelectorAll('#ordersBody tr').forEach(row => {
+                const matches = row.dataset.searchText.includes(searchTerm);
+                row.style.display = matches ? '' : 'none';
+            });
+        }
+
+        function toggleCard(header) {
+            const details = header.parentElement.querySelector('.order-card-details');
+            details.classList.toggle('expanded');
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            window.location.href = '/login.html';
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = '';
+            }, 5000);
+        }
+
+        // Display user and load orders
+        document.getElementById('userDisplay').textContent = localStorage.getItem('userId') || 'User';
+        loadOrders();
+    </script>
+</body>
+</html>
