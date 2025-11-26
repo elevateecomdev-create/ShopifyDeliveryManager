@@ -12,7 +12,10 @@ const TOKEN_EXPIRY = process.env.TOKEN_EXPIRY || '24h';
 const STORE_DOMAIN = process.env.STORE_DOMAIN;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 
-const users = JSON.parse(fs.readFileSync('./users.json', 'utf8'));
+const users = process.env.USERS.split(',').map(user => {
+    const [id, password] = user.split(':');
+    return { id, password };
+});
 
 const api = axios.create({
     baseURL: `https://${STORE_DOMAIN}/admin/api/2024-10/graphql.json`,
