@@ -7,10 +7,6 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
 const JWT_SECRET = process.env.JWT_SECRET;
 const TOKEN_EXPIRY = process.env.TOKEN_EXPIRY || '24h';
 const STORE_DOMAIN = process.env.STORE_DOMAIN;
@@ -332,7 +328,6 @@ app.post('/api/orders/:orderId/delivered', async (req, res) => {
             await api.post('', { query: deliveredMutation, variables: deliveredVariables });
             res.json({ success: true, message: 'Order fulfilled and marked as delivered' });
         }
-
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -340,22 +335,6 @@ app.post('/api/orders/:orderId/delivered', async (req, res) => {
 
 app.get('/', (req, res) => {
     res.redirect('/login.html');
-});
-
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-});
-
-                    }]
-                }
-            };
-
-            await api.post('', { query: mutation, variables });
-            res.json({ success: true, message: 'Order marked as delivered' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
 });
 
 app.listen(PORT, () => {
