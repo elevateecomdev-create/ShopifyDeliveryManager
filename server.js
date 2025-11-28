@@ -55,7 +55,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/api/login', (req, res) => {
     const { id, password } = req.body;
@@ -342,7 +342,15 @@ app.post('/api/orders/:orderId/delivered', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.redirect('/login.html');
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {

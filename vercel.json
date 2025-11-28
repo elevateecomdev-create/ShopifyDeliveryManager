@@ -12,10 +12,6 @@
   ],
   "routes": [
     {
-      "src": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|json|js|css))",
-      "dest": "/public/$1"
-    },
-    {
       "src": "/api/(.*)",
       "dest": "server.js"
     },
