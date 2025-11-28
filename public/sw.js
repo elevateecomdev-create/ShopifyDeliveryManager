@@ -3,7 +3,7 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/login.html',
-  '/PRO-VITAL LOGO.png'
+  '/provital-logo.png'
 ];
 
 self.addEventListener('install', event => {
