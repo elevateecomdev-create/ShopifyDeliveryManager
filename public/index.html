@@ -3,6 +3,13 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Provital Delivery Manager</title>
+    <link rel="icon" type="image/png" href="/PRO-VITAL LOGO.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Provital">
+    <link rel="apple-touch-icon" href="/PRO-VITAL LOGO.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -27,6 +34,8 @@
             justify-content: space-between;
             align-items: center;
         }
+        .logo { height: 50px; margin-right: 15px; }
+        .header-left { display: flex; align-items: center; }
         h1 { font-size: 28px; font-weight: 600; }
         .refresh-btn {
             padding: 12px 24px;
@@ -231,6 +240,8 @@
                 padding: 20px;
                 text-align: center;
             }
+            .header-left { flex-direction: column; }
+            .logo { height: 40px; margin: 0 0 10px 0; }
             .header-actions {
                 flex-direction: column;
                 width: 100%;
@@ -254,7 +265,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📦 Provital Delivery Manager</h1>
+            <div class="header-left">
+                <img src="/PRO-VITAL LOGO.png" alt="Provital Logo" class="logo">
+                <h1>Delivery Manager</h1>
+            </div>
             <div class="header-actions">
                 <span style="margin-right: 15px; opacity: 0.9;">👤 <span id="userDisplay"></span></span>
                 <button class="refresh-btn" onclick="currentCursor = null; loadOrders()">🔄 Refresh</button>
@@ -554,6 +568,11 @@
         // Display user and load orders
         document.getElementById('userDisplay').textContent = localStorage.getItem('userId') || 'User';
         loadOrders();
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
     </script>
 </body>
 </html>
