@@ -260,6 +260,80 @@
             .order-card { display: block; }
             .message { margin: 15px; padding: 12px; font-size: 14px; }
         }
+        
+        /* Tab Navigation Styles */
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            padding: 10px 30px 0 30px;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #495057;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            margin-right: 5px;
+            transition: all 0.3s;
+            box-shadow: none;
+        }
+        .tab-btn:hover {
+            background: #e9ecef;
+            transform: none;
+            box-shadow: none;
+        }
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            border-top: 3px solid #667eea;
+            border-left: 1px solid #dee2e6;
+            border-right: 1px solid #dee2e6;
+            border-bottom: 2px solid white;
+            margin-bottom: -2px;
+        }
+        
+        /* Order Details Controls Styles */
+        .details-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            align-items: flex-end;
+        }
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .control-item label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+        }
+        .control-item input[type="datetime-local"] {
+            padding: 10px 14px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .control-item input[type="datetime-local"]:focus {
+            border-color: #667eea;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #0e8070 0%, #2dd368 100%) !important;
+        }
     </style>
 </head>
 <body>
@@ -275,29 +349,77 @@
                 <button class="refresh-btn" onclick="logout()">🚪 Logout</button>
             </div>
         </div>
-        <div id="message"></div>
-        <div class="search-container">
-            <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search by order name, ID, customer, or product..." oninput="filterOrders()">
+        
+        <!-- Tab Navigation Bar -->
+        <div class="tabs">
+            <button id="tab-fulfillment" class="tab-btn active" onclick="switchTab('fulfillment')">🚚 Fulfillment Manager</button>
+            <button id="tab-details" class="tab-btn" onclick="switchTab('details')">📊 Order Details</button>
         </div>
-        <div class="table-container">
-            <div id="ordersCards"></div>
-            <table id="ordersTable">
-        <thead>
-            <tr>
-                <th>Order ID</th>
-                <th>Order Name</th>
-                <th>Products</th>
-                <th>Payment</th>
-                <th>Status</th>
-                <th>Total</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="ordersBody">
-            </tbody>
-        </table>
+        
+        <div id="message"></div>
+        
+        <!-- Tab 1: Fulfillment Content -->
+        <div id="tabContent-fulfillment" class="tab-content">
+            <div class="search-container">
+                <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search by order name, ID, customer, or product..." oninput="filterOrders()">
+            </div>
+            <div class="table-container">
+                <div id="ordersCards"></div>
+                <table id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Order Name</th>
+                            <th>Products</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 2: Order Details Content -->
+        <div id="tabContent-details" class="tab-content" style="display: none;">
+            <div class="details-controls">
+                <div class="control-item">
+                    <label for="startDateInput">Start Date:</label>
+                    <input type="datetime-local" id="startDateInput">
+                </div>
+                <div class="control-item">
+                    <label for="endDateInput">End Date:</label>
+                    <input type="datetime-local" id="endDateInput">
+                </div>
+                <button onclick="loadOrderDetails()">Fetch Orders</button>
+                <button onclick="downloadCSV()" class="btn-success">📥 Download CSV</button>
+            </div>
+            <div class="table-container">
+                <div id="detailsCards"></div>
+                <table id="detailsTable">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Date</th>
+                            <th>Recipient Name</th>
+                            <th>Phone Number</th>
+                            <th>Delivery Address</th>
+                            <th>Products Ordered</th>
+                            <th>Fulfillment</th>
+                            <th>Payment</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailsBody">
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -530,6 +652,40 @@
             );
         }
 
+        async function fulfillOrderDetails(orderId, orderName) {
+            const button = event.target;
+            
+            showConfirmModal(
+                '🚚 Fulfill Order',
+                `Are you sure you want to FULFILL and mark Order ${orderName} (#${orderId}) as DELIVERED?`,
+                async () => {
+                    button.disabled = true;
+                    button.textContent = 'Processing...';
+                    
+                    try {
+                        const response = await fetchWithAuth(`/api/order-details/${orderId}/fulfill`, {
+                            method: 'POST'
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            showMessage(result.message, 'success');
+                            loadOrderDetails();
+                        } else {
+                            showMessage('Error: ' + result.error, 'error');
+                            button.disabled = false;
+                            button.textContent = 'Fulfill';
+                        }
+                    } catch (error) {
+                        showMessage('Error: ' + error.message, 'error');
+                        button.disabled = false;
+                        button.textContent = 'Fulfill';
+                    }
+                }
+            );
+        }
+
         function filterOrders() {
             const searchTerm = document.getElementById('searchBox').value.toLowerCase();
             
@@ -557,12 +713,216 @@
 
         function showMessage(text, type) {
             const messageDiv = document.getElementById('message');
-            messageDiv.textContent = text;
-            messageDiv.className = `message ${type}`;
-            setTimeout(() => {
-                messageDiv.textContent = '';
-                messageDiv.className = '';
-            }, 5000);
+            if (messageDiv) {
+                messageDiv.textContent = text;
+                messageDiv.className = `message ${type}`;
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                    messageDiv.className = '';
+                }, 5000);
+            }
+        }
+
+        // Tab and Order Details UI Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`tabContent-${tabId}`).style.display = 'block';
+            
+            if (tabId === 'details') {
+                if (!document.getElementById('startDateInput').value) {
+                    const now = new Date();
+                    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                    
+                    const formatDateTime = (date) => {
+                        const tzoffset = date.getTimezoneOffset() * 60000;
+                        return (new Date(date - tzoffset)).toISOString().slice(0, 16);
+                    };
+                    
+                    document.getElementById('startDateInput').value = formatDateTime(yesterday);
+                    document.getElementById('endDateInput').value = formatDateTime(now);
+                }
+                loadOrderDetails();
+            }
+        }
+
+        let currentOrderDetails = [];
+
+        async function loadOrderDetails() {
+            const startVal = document.getElementById('startDateInput').value;
+            const endVal = document.getElementById('endDateInput').value;
+            
+            if (!startVal || !endVal) {
+                showMessage('Please select both start and end dates', 'error');
+                return;
+            }
+            
+            const startDate = new Date(startVal).toISOString();
+            const endDate = new Date(endVal).toISOString();
+            
+            try {
+                const response = await fetchWithAuth(`/api/order-details?startDate=${startDate}&endDate=${endDate}`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to load order details');
+                }
+                
+                currentOrderDetails = data.orders || [];
+                
+                const tbody = document.getElementById('detailsBody');
+                tbody.innerHTML = '';
+                
+                const cardsContainer = document.getElementById('detailsCards');
+                cardsContainer.innerHTML = '';
+                
+                if (currentOrderDetails.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #6c757d;">No orders found in this date range.</td></tr>';
+                    cardsContainer.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px;">No orders found in this date range.</div>';
+                    return;
+                }
+                
+                currentOrderDetails.forEach(order => {
+                    const recipient = order.shippingAddress ? order.shippingAddress.name : '—';
+                    const phone = order.shippingAddress ? order.shippingAddress.phone : '—';
+                    const address = order.shippingAddress ? 
+                        [order.shippingAddress.address1, order.shippingAddress.address2, order.shippingAddress.city, order.shippingAddress.country]
+                        .filter(Boolean).join(', ') : '—';
+                    
+                    const products = order.lineItems?.edges?.map(e => 
+                        `${e.node.name} (x${e.node.quantity})`
+                    ).join(', ') || '—';
+                    
+                    const isPaid = order.displayFinancialStatus === 'PAID';
+                    const isDelivered = order.displayFulfillmentStatus === 'DELIVERED';
+                    const isFulfillDisabled = order.displayFulfillmentStatus === 'FULFILLED' || order.displayFulfillmentStatus === 'DELIVERED';
+                    const statusClass = isDelivered ? 'delivered' : 
+                                       order.displayFulfillmentStatus === 'FULFILLED' ? 'fulfilled' : 'unfulfilled';
+                    
+                    // Desktop row
+                    const row = document.createElement('tr');
+                    row.className = statusClass;
+                    row.innerHTML = `
+                        <td><strong>${order.name}</strong></td>
+                        <td>${new Date(order.createdAt).toLocaleString()}</td>
+                        <td><strong>${recipient}</strong></td>
+                        <td><a href="tel:${phone}" style="color: inherit; text-decoration: none;">📞 ${phone}</a></td>
+                        <td style="max-width: 250px; font-size: 13px;">${address}</td>
+                        <td class="products-cell">${products}</td>
+                        <td><span class="status-badge">${order.displayFulfillmentStatus || 'UNFULFILLED'}</span></td>
+                        <td><span class="status-badge ${isPaid ? 'paid' : 'unpaid'}">${order.displayFinancialStatus || 'PENDING'}</span></td>
+                        <td>${order.totalPriceSet?.shopMoney?.amount || '0'} ${order.totalPriceSet?.shopMoney?.currencyCode || ''}</td>
+                        <td>
+                            <button onclick="fulfillOrderDetails('${order.orderId}', '${order.name}')" 
+                                    ${isFulfillDisabled ? 'disabled' : ''}>
+                                ${order.displayFulfillmentStatus === 'DELIVERED' ? 'Delivered' : order.displayFulfillmentStatus === 'FULFILLED' ? 'Fulfilled' : 'Fulfill'}
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                    
+                    // Mobile card
+                    const card = document.createElement('div');
+                    card.className = `order-card ${statusClass}`;
+                    card.style.display = 'block';
+                    card.innerHTML = `
+                        <div class="order-card-header" onclick="toggleCard(this)">
+                            <div class="order-card-title">${order.name} - ${recipient}</div>
+                            <span class="status-badge ${isPaid ? 'paid' : 'unpaid'}">${order.displayFinancialStatus || 'PENDING'}</span>
+                        </div>
+                        <div style="font-size: 13px; color: #6c757d; margin-bottom: 5px;">${new Date(order.createdAt).toLocaleString()}</div>
+                        <div class="order-card-details">
+                            <div class="detail-row"><span class="detail-label">Phone:</span><span><a href="tel:${phone}">📞 ${phone}</a></span></div>
+                            <div class="detail-row"><span class="detail-label">Address:</span><span style="text-align: right; max-width: 70%;">${address}</span></div>
+                            <div class="detail-row"><span class="detail-label">Products:</span><span style="text-align: right; max-width: 70%;">${products}</span></div>
+                            <div class="detail-row"><span class="detail-label">Fulfillment:</span><span class="status-badge">${order.displayFulfillmentStatus || 'UNFULFILLED'}</span></div>
+                            <div class="detail-row"><span class="detail-label">Total:</span><span>${order.totalPriceSet?.shopMoney?.amount || '0'} ${order.totalPriceSet?.shopMoney?.currencyCode || ''}</span></div>
+                            <div class="card-actions" style="margin-top: 10px;">
+                                <button onclick="fulfillOrderDetails('${order.orderId}', '${order.name}')" 
+                                        ${isFulfillDisabled ? 'disabled' : ''}>
+                                    ${order.displayFulfillmentStatus === 'DELIVERED' ? 'Delivered' : order.displayFulfillmentStatus === 'FULFILLED' ? 'Fulfilled' : 'Fulfill'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    cardsContainer.appendChild(card);
+                });
+            } catch (error) {
+                showMessage('Error loading order details: ' + error.message, 'error');
+            }
+        }
+
+        function downloadCSV() {
+            if (currentOrderDetails.length === 0) {
+                showMessage('No data available to download', 'error');
+                return;
+            }
+            
+            const headers = [
+                "Order Number",
+                "Date/Time",
+                "Recipient Name",
+                "Phone Number",
+                "Address 1",
+                "Address 2",
+                "City",
+                "Province/State",
+                "Zip/Postal Code",
+                "Country",
+                "Products Ordered",
+                "Fulfillment Status",
+                "Payment Status",
+                "Total Amount"
+            ];
+            
+            const rows = currentOrderDetails.map(order => {
+                const address = order.shippingAddress || {};
+                const productsStr = order.lineItems?.edges?.map(e => 
+                    `${e.node.name} (x${e.node.quantity})`
+                ).join('; ') || '';
+                
+                return [
+                    order.name,
+                    order.createdAt,
+                    address.name || '',
+                    address.phone || '',
+                    address.address1 || '',
+                    address.address2 || '',
+                    address.city || '',
+                    address.province || '',
+                    address.zip || '',
+                    address.country || '',
+                    productsStr,
+                    order.displayFulfillmentStatus || 'UNFULFILLED',
+                    order.displayFinancialStatus || 'PENDING',
+                    `${order.totalPriceSet?.shopMoney?.amount || '0'} ${order.totalPriceSet?.shopMoney?.currencyCode || ''}`
+                ];
+            });
+            
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => 
+                    row.map(val => {
+                        const text = String(val).replace(/"/g, '""');
+                        return text.includes(',') || text.includes('\n') || text.includes('"') ? `"${text}"` : text;
+                    }).join(',')
+                )
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            
+            const startVal = document.getElementById('startDateInput').value.split('T')[0];
+            const endVal = document.getElementById('endDateInput').value.split('T')[0];
+            link.setAttribute("download", `orders_${startVal}_to_${endVal}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         // Display user and load orders
