@@ -174,7 +174,7 @@ app.get('/api/order-details', async (req, res) => {
         }
         
         const STORE_DOMAIN = process.env.STORE_DOMAIN;
-        const ACCESS_TOKEN = (process.env.NEW_ACCESS_TOKEN || process.env.ACCESS_TOKEN || '').trim();
+        const ACCESS_TOKEN = (process.env.NEW_ACCESS_TOKEN || '').trim();
 
         if (!STORE_DOMAIN || !ACCESS_TOKEN) {
             throw new Error('Shopify credentials missing in environment variables');
@@ -250,7 +250,7 @@ app.post('/api/order-details/:orderId/fulfill', authMiddleware, async (req, res)
     try {
         const orderId = req.params.orderId;
         const STORE_DOMAIN = process.env.STORE_DOMAIN;
-        const ACCESS_TOKEN = (process.env.NEW_ACCESS_TOKEN || process.env.ACCESS_TOKEN || '').trim();
+        const ACCESS_TOKEN = (process.env.NEW_ACCESS_TOKEN || '').trim();
 
         if (!STORE_DOMAIN || !ACCESS_TOKEN) {
             throw new Error('Shopify credentials missing in environment variables');
