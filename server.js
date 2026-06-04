@@ -24,6 +24,11 @@ const api = axios.create({
 
 app.use(express.json());
 
+app.use('/api', (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    next();
+});
+
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', 'https://provitaldeliverymanager-1ed386.netlify.app');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
