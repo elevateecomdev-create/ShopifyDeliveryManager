@@ -10,6 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Provital">
     <link rel="apple-touch-icon" href="/provital-logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -334,6 +335,48 @@
         .btn-success:hover {
             background: linear-gradient(135deg, #0e8070 0%, #2dd368 100%) !important;
         }
+        .btn-excel {
+            background: linear-gradient(135deg, #1f7246 0%, #238551 100%) !important;
+        }
+        .btn-excel:hover {
+            background: linear-gradient(135deg, #175433 0%, #1c6b41 100%) !important;
+        }
+        
+        /* Loading Overlay Styles */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .loading-overlay.show {
+            display: flex;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #e9ecef;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loading-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #495057;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -398,6 +441,7 @@
                 </div>
                 <button onclick="loadOrderDetails()">Fetch Orders</button>
                 <button onclick="downloadCSV()" class="btn-success">📥 Download CSV</button>
+                <button onclick="downloadExcel()" class="btn-excel">📥 Download Excel</button>
             </div>
             <div class="table-container">
                 <div id="detailsCards"></div>
@@ -434,6 +478,12 @@
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Loading...</div>
+    </div>
+
     <script>
         const token = localStorage.getItem('token');
         if (!token) {
@@ -457,8 +507,18 @@
             return response;
         }
 
+        function showLoader(message = 'Loading...') {
+            document.getElementById('loadingText').textContent = message;
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+
+        function hideLoader() {
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+
         async function loadOrders(cursor = null) {
             try {
+                showLoader('Fetching orders...');
                 const url = cursor ? `/api/orders?cursor=${cursor}` : '/api/orders';
                 const response = await fetchWithAuth(url);
                 const data = await response.json();
@@ -551,6 +611,8 @@
                 updatePaginationButton();
             } catch (error) {
                 showMessage('Error loading orders: ' + error.message, 'error');
+            } finally {
+                hideLoader();
             }
         }
 
@@ -763,6 +825,7 @@
             const endDate = new Date(endVal).toISOString();
             
             try {
+                showLoader('Fetching order details...');
                 const response = await fetchWithAuth(`/api/order-details?startDate=${startDate}&endDate=${endDate}`);
                 const data = await response.json();
                 
@@ -851,6 +914,8 @@
                 });
             } catch (error) {
                 showMessage('Error loading order details: ' + error.message, 'error');
+            } finally {
+                hideLoader();
             }
         }
 
@@ -860,69 +925,145 @@
                 return;
             }
             
-            const headers = [
-                "Order Number",
-                "Date/Time",
-                "Recipient Name",
-                "Phone Number",
-                "Address 1",
-                "Address 2",
-                "City",
-                "Province/State",
-                "Zip/Postal Code",
-                "Country",
-                "Products Ordered",
-                "Fulfillment Status",
-                "Payment Status",
-                "Total Amount"
-            ];
+            showLoader('Generating CSV file...');
             
-            const rows = currentOrderDetails.map(order => {
-                const address = order.shippingAddress || {};
-                const productsStr = order.lineItems?.edges?.map(e => 
-                    `${e.node.name} (x${e.node.quantity})`
-                ).join('; ') || '';
-                
-                return [
-                    order.name,
-                    order.createdAt,
-                    address.name || '',
-                    address.phone || '',
-                    address.address1 || '',
-                    address.address2 || '',
-                    address.city || '',
-                    address.province || '',
-                    address.zip || '',
-                    address.country || '',
-                    productsStr,
-                    order.displayFulfillmentStatus || 'UNFULFILLED',
-                    order.displayFinancialStatus || 'PENDING',
-                    `${order.totalPriceSet?.shopMoney?.amount || '0'} ${order.totalPriceSet?.shopMoney?.currencyCode || ''}`
-                ];
-            });
+            setTimeout(() => {
+                try {
+                    const headers = [
+                        "Order Number",
+                        "Date/Time",
+                        "Recipient Name",
+                        "Phone Number",
+                        "Address 1",
+                        "Address 2",
+                        "City",
+                        "Province/State",
+                        "Zip/Postal Code",
+                        "Country",
+                        "Products Ordered",
+                        "Fulfillment Status",
+                        "Payment Status",
+                        "Total Amount"
+                    ];
+                    
+                    const rows = currentOrderDetails.map(order => {
+                        const address = order.shippingAddress || {};
+                        const productsStr = order.lineItems?.edges?.map(e => 
+                            `${e.node.name} (x${e.node.quantity})`
+                        ).join('; ') || '';
+                        
+                        return [
+                            order.name,
+                            order.createdAt,
+                            address.name || '',
+                            address.phone || '',
+                            address.address1 || '',
+                            address.address2 || '',
+                            address.city || '',
+                            address.province || '',
+                            address.zip || '',
+                            address.country || '',
+                            productsStr,
+                            order.displayFulfillmentStatus || 'UNFULFILLED',
+                            order.displayFinancialStatus || 'PENDING',
+                            `${order.totalPriceSet?.shopMoney?.amount || '0'} ${order.totalPriceSet?.shopMoney?.currencyCode || ''}`
+                        ];
+                    });
+                    
+                    const csvContent = [
+                        headers.join(','),
+                        ...rows.map(row => 
+                            row.map(val => {
+                                const text = String(val).replace(/"/g, '""');
+                                return text.includes(',') || text.includes('\n') || text.includes('"') ? `"${text}"` : text;
+                            }).join(',')
+                        )
+                    ].join('\n');
+                    
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", url);
+                    
+                    const startVal = document.getElementById('startDateInput').value.split('T')[0];
+                    const endVal = document.getElementById('endDateInput').value.split('T')[0];
+                    link.setAttribute("download", `orders_${startVal}_to_${endVal}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch (error) {
+                    showMessage('Error generating CSV: ' + error.message, 'error');
+                } finally {
+                    hideLoader();
+                }
+            }, 300);
+        }
+
+        function downloadExcel() {
+            if (currentOrderDetails.length === 0) {
+                showMessage('No data available to download', 'error');
+                return;
+            }
             
-            const csvContent = [
-                headers.join(','),
-                ...rows.map(row => 
-                    row.map(val => {
-                        const text = String(val).replace(/"/g, '""');
-                        return text.includes(',') || text.includes('\n') || text.includes('"') ? `"${text}"` : text;
-                    }).join(',')
-                )
-            ].join('\n');
+            showLoader('Generating Excel file...');
             
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            
-            const startVal = document.getElementById('startDateInput').value.split('T')[0];
-            const endVal = document.getElementById('endDateInput').value.split('T')[0];
-            link.setAttribute("download", `orders_${startVal}_to_${endVal}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            setTimeout(() => {
+                try {
+                    const headers = [
+                        "Order Number",
+                        "Date/Time",
+                        "Recipient Name",
+                        "Phone Number",
+                        "Address 1",
+                        "Address 2",
+                        "City",
+                        "Province/State",
+                        "Zip/Postal Code",
+                        "Country",
+                        "Products Ordered",
+                        "Fulfillment Status",
+                        "Payment Status",
+                        "Total Amount"
+                    ];
+                    
+                    const data = currentOrderDetails.map(order => {
+                        const address = order.shippingAddress || {};
+                        const productsStr = order.lineItems?.edges?.map(e => 
+                            `${e.node.name} (x${e.node.quantity})`
+                        ).join('; ') || '';
+                        
+                        return [
+                            order.name,
+                            order.createdAt,
+                            address.name || '',
+                            address.phone || '',
+                            address.address1 || '',
+                            address.address2 || '',
+                            address.city || '',
+                            address.province || '',
+                            address.zip || '',
+                            address.country || '',
+                            productsStr,
+                            order.displayFulfillmentStatus || 'UNFULFILLED',
+                            order.displayFinancialStatus || 'PENDING',
+                            `${order.totalPriceSet?.shopMoney?.amount || '0'} ${order.totalPriceSet?.shopMoney?.currencyCode || ''}`
+                        ];
+                    });
+
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+                    XLSX.utils.book_append_sheet(wb, ws, "Orders");
+                    
+                    const startVal = document.getElementById('startDateInput').value.split('T')[0];
+                    const endVal = document.getElementById('endDateInput').value.split('T')[0];
+                    XLSX.writeFile(wb, `orders_${startVal}_to_${endVal}.xlsx`);
+                } catch (error) {
+                    showMessage('Error generating Excel file: ' + error.message, 'error');
+                } finally {
+                    hideLoader();
+                }
+            }, 300);
         }
 
         // Display user and load orders
