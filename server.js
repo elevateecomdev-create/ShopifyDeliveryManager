@@ -80,6 +80,9 @@ app.get('/api/orders', async (req, res) => {
         const cursorParam = cursor ? `, after: "${cursor}"` : '';
         
         const query = `{
+      ordersCount(query: "fulfillment_status:unfulfilled") {
+        count
+      }
       orders(first: 250${cursorParam}, query: "fulfillment_status:fulfilled", sortKey: UPDATED_AT, reverse: true) {
         pageInfo {
           hasNextPage
@@ -156,8 +159,9 @@ app.get('/api/orders', async (req, res) => {
             .filter(order => order.displayFulfillmentStatus !== 'DELIVERED');
         
         const pageInfo = response.data.data.orders.pageInfo;
+        const unfulfilledCount = response.data.data.ordersCount?.count || 0;
         console.log('Final orders array:', orders);
-        res.json({ orders, pageInfo });
+        res.json({ orders, pageInfo, unfulfilledCount });
     } catch (error) {
         console.error('Orders API error:', error);
         res.status(500).json({ error: error.message });
@@ -194,6 +198,9 @@ app.get('/api/order-details', async (req, res) => {
         });
 
         const query = `{
+          ordersCount(query: "fulfillment_status:unfulfilled") {
+            count
+          }
           orders(first: 250, query: "${dateQuery}", sortKey: CREATED_AT, reverse: true) {
             edges {
               node {
@@ -206,6 +213,7 @@ app.get('/api/order-details', async (req, res) => {
                 shippingAddress {
                   name
                   phone
+                  company
                   address1
                   address2
                   city
@@ -244,7 +252,8 @@ app.get('/api/order-details', async (req, res) => {
             };
         });
         
-        res.json({ orders });
+        const unfulfilledCount = response.data.data.ordersCount?.count || 0;
+        res.json({ orders, unfulfilledCount });
     } catch (error) {
         console.error('Order Details API error:', error);
         res.status(500).json({ error: error.message });

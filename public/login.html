@@ -1,113 +1,423 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Provital Delivery Manager</title>
     <link rel="icon" type="image/png" href="/provital-logo.png">
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#6366f1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="/provital-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: rgba(99, 102, 241, 0.1);
+            --bg-main: #0b0f19;
+            --card-bg: rgba(22, 30, 49, 0.7);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-focus: #6366f1;
+            --error: #ef4444;
+            --error-bg: rgba(239, 68, 68, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            overflow: hidden;
+            position: relative;
         }
-        .login-container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
+
+        /* Ambient Background Blobs */
+        .ambient-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 1;
+            opacity: 0.4;
+            animation: float 20s infinite alternate ease-in-out;
+        }
+
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #6366f1 0%, #312e81 100%);
+            top: -10%;
+            left: -10%;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #ec4899 0%, #4d1d39 100%);
+            bottom: -15%;
+            right: -10%;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #06b6d4 0%, #083344 100%);
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.15;
+            animation-duration: 25s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -50px) scale(1.1); }
+            100% { transform: translate(-20px, 30px) scale(0.9); }
+        }
+
+        .login-wrapper {
+            position: relative;
+            z-index: 10;
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
         }
-        h1 {
+
+        .login-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .logo-section {
             text-align: center;
-            color: #667eea;
-            margin-bottom: 30px;
-            font-size: 28px;
+            margin-bottom: 32px;
         }
+
+        .logo-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            border-radius: 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+        }
+
+        .logo-icon svg {
+            width: 32px;
+            height: 32px;
+            fill: none;
+            stroke: white;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        h1 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            position: relative;
         }
+
         label {
             display: block;
             margin-bottom: 8px;
-            color: #495057;
+            color: #e5e7eb;
+            font-size: 13px;
             font-weight: 500;
+            letter-spacing: 0.3px;
         }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            color: var(--text-muted);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
         input {
             width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
+            padding: 14px 16px 14px 48px;
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
             font-size: 14px;
-            transition: all 0.3s;
-        }
-        input:focus {
+            color: #ffffff;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
-        button {
+
+        input:focus {
+            border-color: var(--border-focus);
+            background: rgba(17, 24, 39, 0.8);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Password toggle button */
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+        }
+
+        .toggle-password:hover {
+            color: #ffffff;
+        }
+
+        .toggle-password svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        button[type="submit"] {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 12px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+
+        button[type="submit"]:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
         }
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #dc3545;
+
+        button[type="submit"]:active {
+            transform: translateY(1px);
+        }
+
+        button[type="submit"] .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        button.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        button.loading .spinner {
+            display: block;
+        }
+
+        button.loading .btn-text {
             display: none;
         }
-        .error.show { display: block; }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: var(--error-bg);
+            border-left: 4px solid var(--error);
+            color: #fca5a5;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .error-message.show {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <img src="/provital-logo.png" alt="Provital Logo" style="display: block; margin: 0 auto 20px; max-width: 150px; height: auto;">
-        <h1>Login</h1>
-        <div id="error" class="error"></div>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="userId">User ID</label>
-                <input type="text" id="userId" required autocomplete="username">
+    <!-- Ambient backgrounds -->
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+    <div class="ambient-blob blob-3"></div>
+
+    <div class="login-wrapper">
+        <div class="login-container">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 15l4 3 4-3 4 3 4-3M12 4v7M12 4l3 3M12 4L9 7" stroke="currentColor" />
+                        <rect x="3" y="10" width="18" height="11" rx="2" stroke="currentColor" />
+                    </svg>
+                </div>
+                <h1>Provital</h1>
+                <p class="subtitle">Delivery & Fulfillment Manager</p>
             </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" required autocomplete="current-password">
+
+            <div id="errorMessage" class="error-message">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <span id="errorText">Invalid credentials</span>
             </div>
-            <button type="submit">Login</button>
-        </form>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="userId">User ID</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </span>
+                        <input type="text" id="userId" placeholder="Enter your user ID" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </span>
+                        <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            <svg id="eyeIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn">
+                    <span class="btn-text">Log In</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+        </div>
+        <p class="footer-text">Provital PWA Manager &copy; 2026. All rights reserved.</p>
     </div>
 
     <script>
+        // Check if already logged in
+        if (localStorage.getItem('token')) {
+            window.location.href = '/index.html';
+        }
+
+        // Toggle password visibility
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle eye icon path
+            if (type === 'text') {
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                `;
+            } else {
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                `;
+            }
+        });
+
+        // Form submission
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const id = document.getElementById('userId').value;
             const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('error');
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // UI Loading state
+            errorDiv.classList.remove('show');
+            submitBtn.classList.add('loading');
             
             try {
                 const response = await fetch('/api/login', {
@@ -123,12 +433,14 @@
                     localStorage.setItem('userId', data.userId);
                     window.location.href = '/index.html';
                 } else {
-                    errorDiv.textContent = data.error || 'Login failed';
+                    errorText.textContent = data.error || 'Login failed';
                     errorDiv.classList.add('show');
                 }
             } catch (error) {
-                errorDiv.textContent = 'Network error. Please try again.';
+                errorText.textContent = 'Network error. Please try again.';
                 errorDiv.classList.add('show');
+            } finally {
+                submitBtn.classList.remove('loading');
             }
         });
     </script>

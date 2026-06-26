@@ -1,4 +1,4 @@
-const CACHE_NAME = 'provital-v2';
+const CACHE_NAME = 'provital-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -15,10 +15,23 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-  );
+  // Use network-first for navigation/HTML, fallback to cache
+  if (event.request.mode === 'navigate' || event.request.url.includes('/index.html') || event.request.url.includes('/login.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+  } else {
+    event.respondWith(
+      caches.match(event.request)
+        .then(response => response || fetch(event.request))
+    );
+  }
 });
 
 self.addEventListener('activate', event => {
